@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Installation Manager</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fafafa; color: #1a1a1a; line-height: 1.6; }
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+        h1 { font-size: 2.5rem; font-weight: 300; text-align: center; margin-bottom: 8px; color: #1a1a1a; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 40px; font-size: 1.1rem; }
+        .controls { display: flex; gap: 12px; margin-bottom: 32px; }
+        .btn { background: white; border: 1px solid #e1e5e9; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+        .btn:hover { background: #f8f9fa; border-color: #d0d7de; }
+        .btn-primary { background: #0969da; color: white; border-color: #0969da; padding: 14px 28px; font-weight: 500; }
+        .btn-primary:hover { background: #0860ca; }
+        .app-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 32px; }
+        .app-item { background: white; border: 1px solid #e1e5e9; border-radius: 12px; padding: 20px; transition: all 0.2s; cursor: pointer; }
+        .app-item:hover { border-color: #0969da; box-shadow: 0 4px 12px rgba(9, 105, 218, 0.1); }
+        .app-item.selected { border-color: #0969da; background: #f6f8fa; }
+        .app-item input { display: none; }
+        .app-name { font-size: 1.1rem; font-weight: 500; margin-bottom: 4px; }
+        .app-version { color: #656d76; font-size: 0.9rem; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
+        .modal-content { background: white; margin: 20vh auto; padding: 32px; border-radius: 16px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .modal-content h3 { color: #0969da; margin-bottom: 16px; font-weight: 500; }
+        .modal-content p { margin-bottom: 12px; color: #656d76; }
+        .result { background: white; border: 1px solid #d1f7d1; border-radius: 12px; padding: 24px; margin-top: 32px; max-width: 700px; margin-left: auto; margin-right: auto; }
+        .result h3 { color: #0969da; margin-bottom: 16px; }
+        .result p { margin-bottom: 12px; }
+        .result strong { color: #1a1a1a; }
+        .command-box { background: #f6f8fa; border: 1px solid #e1e5e9; padding: 16px 50px 16px 16px; border-radius: 8px; font-family: 'SF Mono', Monaco, monospace; font-size: 13px; word-break: break-all; margin: 16px 0; position: relative; }
+        .copy-btn { position: absolute; top: 8px; right: 8px; background: none; border: none; padding: 4px; cursor: pointer; font-size: 16px; color: #656d76; }
+        .copy-btn:hover { color: #1a1a1a; }
+        .btn-solid { background: #0969da; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-size: 14px; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-block; font-weight: 500; }
+        .btn-solid:hover { background: #0860ca; }
+        .hidden { display: none; }
+        .create-session { text-align: center; margin-top: 32px; }
+        .notification { position: fixed; top: 20px; right: 20px; background: #0969da; color: white; padding: 12px 16px; border-radius: 8px; font-size: 14px; z-index: 1001; opacity: 0; transform: translateX(100%); transition: all 0.3s; }
+        .notification.show { opacity: 1; transform: translateX(0); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Installation Manager</h1>
+        <p class="subtitle">Select the applications you want to install</p>
+        <div class="controls">
+            <button type="button" class="btn" onclick="selectAll()">Select All</button>
+            <button type="button" class="btn" onclick="selectNone()">Clear All</button>
+        </div>
+        <div id="app-list" class="app-grid"></div>
+        <div class="create-session">
+            <button onclick="createSession()" id="createBtn" class="btn btn-primary">Create Installation Session</button>
+        </div>
+    </div>
+    <div id="result" class="hidden">
+        <div class="result">
+            <h3>Session Created Successfully!</h3>
+            <p><strong>Session ID:</strong> <span id="sessionId"></span></p>
+            <p><strong>Run this command in PowerShell (as Administrator):</strong></p>
+            <div class="command-box" id="psCommand"></div>
+            <p><a href="#" id="sessionLink" class="btn-solid" style="margin-top: 16px;">View Progress</a></p>
+        </div>
+    </div>
+    <div id="ubuntuModal" class="modal">
+        <div class="modal-content">
+            <h3>Ubuntu Setup Required</h3>
+            <p>After Ubuntu installation, a new terminal window will open where you'll need to:</p>
+            <p><strong>• Create a username<br>• Set a password</strong></p>
+            <p>This is a one-time setup for your Ubuntu environment.</p>
+            <button onclick="closeModal()" class="btn btn-primary">Got it!</button>
+        </div>
+    </div>
+    <script>
+        async function loadApps() {
+            const resp = await fetch('/api/apps');
+            const data = await resp.json();
+            const appList = document.getElementById('app-list');
+            appList.innerHTML = data.apps.map(app => `
+                <div class="app-item" onclick="toggleApp('${app.id}')">
+                    <input type="checkbox" name="apps" value="${app.id}" onchange="handleAppSelection('${app.id}', this.checked)">
+                    <div class="app-name">${app.name}</div>
+                    <div class="app-version">${app.version} • ${app.installer_type}</div>
+                </div>
+            `).join('');
+        }
+        function selectAll() {
+            document.querySelectorAll('input[name="apps"]').forEach(cb => {
+                cb.checked = true;
+                cb.closest('.app-item').classList.add('selected');
+            });
+        }
+        function selectNone() {
+            document.querySelectorAll('input[name="apps"]').forEach(cb => {
+                cb.checked = false;
+                cb.closest('.app-item').classList.remove('selected');
+            });
+        }
+        function handleAppSelection(appId, isChecked) {
+            if (appId === 'ubuntu' && isChecked) {
+                document.getElementById('ubuntuModal').style.display = 'block';
+            }
+            
+            // Auto-select dependencies
+            if (isChecked) {
+                if (appId === 'wsl') {
+                    selectDependencies(['ubuntu'], 'WSL requires Ubuntu');
+                } else if (appId === 'docker-desktop') {
+                    selectDependencies(['wsl', 'ubuntu'], 'Docker requires WSL and Ubuntu');
+                }
+            }
+        }
+        
+        function selectDependencies(deps, message) {
+            let added = [];
+            deps.forEach(depId => {
+                const checkbox = document.querySelector(`input[value="${depId}"]`);
+                if (checkbox && !checkbox.checked) {
+                    checkbox.checked = true;
+                    checkbox.closest('.app-item').classList.add('selected');
+                    added.push(depId);
+                }
+            });
+            if (added.length > 0) {
+                showNotification(message);
+            }
+        }
+        
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.classList.add('show'), 100);
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => document.body.removeChild(notification), 300);
+            }, 3000);
+        }
+        function closeModal() {
+            document.getElementById('ubuntuModal').style.display = 'none';
+        }
+        function toggleApp(appId) {
+            const checkbox = document.querySelector(`input[value="${appId}"]`);
+            const appItem = checkbox.closest('.app-item');
+            checkbox.checked = !checkbox.checked;
+            appItem.classList.toggle('selected', checkbox.checked);
+            handleAppSelection(appId, checkbox.checked);
+        }
+        async function createSession() {
+            const selected = Array.from(document.querySelectorAll('input[name="apps"]:checked')).map(cb => cb.value);
+            if (selected.length === 0) {
+                alert('Please select at least one application');
+                return;
+            }
+            const response = await fetch('/api/create-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(selected)
+            });
+            const data = await response.json();
+            if (response.ok) {
+                document.getElementById('sessionId').textContent = data.session_id;
+                const command = `powershell.exe -ExecutionPolicy Bypass -Command "$f='$env:TEMP\\install.ps1'; Invoke-RestMethod '${data.s3_url}' -OutFile $f; & $f -SessionId '${data.session_id}' -ApiBaseUrl '${window.location.origin}'"`;                
+                document.getElementById('psCommand').innerHTML = `${command}<button class="copy-btn" onclick="copyCommand()" title="Copy command">📋</button>`;
+                document.getElementById('sessionLink').href = `/session/${data.session_id}`;
+                document.getElementById('result').classList.remove('hidden');
+            } else {
+                alert('Error: ' + (data.detail || 'Unknown error'));
+            }
+        }
+        function copyCommand() {
+            const commandElement = document.getElementById('psCommand');
+            const command = commandElement.textContent.replace('Copy', '').trim();
+            navigator.clipboard.writeText(command).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = '✓';
+                setTimeout(() => {
+                    btn.textContent = '📋';
+                }, 1000);
+            });
+        }
+        window.onload = loadApps;
+    </script>
+</body>
+</html>

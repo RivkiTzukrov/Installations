@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Installation Progress</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fafafa; color: #1a1a1a; line-height: 1.6; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+        h1 { font-size: 2.2rem; font-weight: 300; margin-bottom: 8px; color: #1a1a1a; }
+        .subtitle { color: #656d76; margin-bottom: 32px; font-size: 1rem; }
+        .command-section { background: white; border: 1px solid #e1e5e9; border-radius: 12px; padding: 24px; margin-bottom: 24px; max-width: 800px; margin-left: auto; margin-right: auto; }
+        .command-section h3 { font-size: 1.1rem; font-weight: 500; margin-bottom: 12px; color: #1a1a1a; }
+        .command-box { background: #f6f8fa; border: 1px solid #e1e5e9; padding: 16px 50px 16px 16px; border-radius: 8px; font-family: 'SF Mono', Monaco, monospace; font-size: 13px; word-break: break-all; position: relative; }
+        .copy-btn { position: absolute; top: 8px; right: 8px; background: none; border: none; padding: 4px; cursor: pointer; font-size: 16px; color: #656d76; }
+        .copy-btn:hover { color: #1a1a1a; }
+        .controls { display: flex; gap: 12px; align-items: center; margin-bottom: 24px; }
+        .btn { background: white; border: 1px solid #e1e5e9; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: all 0.2s; text-decoration: none; color: #1a1a1a; }
+        .btn:hover { background: #f8f9fa; border-color: #d0d7de; }
+        .btn-primary { background: #0969da; color: white; border-color: #0969da; }
+        .btn-primary:hover { background: #0860ca; }
+        .checkbox-wrapper { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+        .checkbox-wrapper input { margin: 0; }
+        .logs-container { background: white; border: 1px solid #e1e5e9; border-radius: 12px; overflow: hidden; }
+        #logs { max-height: 600px; overflow-y: auto; padding: 0; }
+        .log-entry { padding: 16px 20px; border-bottom: 1px solid #f6f8fa; display: flex; align-items: flex-start; gap: 12px; }
+        .log-entry:last-child { border-bottom: none; }
+        .log-entry.starting { background: #fff8e1; border-left: 3px solid #ff9800; }
+        .log-entry.running { background: #e3f2fd; border-left: 3px solid #2196f3; }
+        .log-entry.success { background: #e8f5e8; border-left: 3px solid #4caf50; }
+        .log-entry.error { background: #ffebee; border-left: 3px solid #f44336; }
+        .log-entry.info { background: #e0f2f1; border-left: 3px solid #009688; }
+        .log-meta { display: flex; flex-direction: column; min-width: 120px; }
+        .timestamp { font-size: 0.85rem; color: #656d76; font-family: 'SF Mono', Monaco, monospace; }
+        .app-id { font-weight: 500; color: #1a1a1a; font-size: 0.9rem; }
+        .status-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 500; text-transform: uppercase; margin-top: 4px; }
+        .status-badge.starting { background: #fff3e0; color: #e65100; }
+        .status-badge.running { background: #e3f2fd; color: #1565c0; }
+        .status-badge.success { background: #e8f5e8; color: #2e7d32; }
+        .status-badge.error { background: #ffebee; color: #c62828; }
+        .status-badge.info { background: #e0f2f1; color: #00695c; }
+        .log-message { flex: 1; color: #1a1a1a; font-size: 0.95rem; }
+        .empty-state { text-align: center; padding: 60px 20px; color: #656d76; }
+        .empty-state-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.5; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Installation Progress</h1>
+        <p class="subtitle">Monitor your software installation in real-time</p>
+        
+        <div class="command-section">
+            <h3>Run this command in PowerShell (as Administrator)</h3>
+            <div class="command-box" id="commandBox">
+                <!-- Command will be populated by JavaScript -->
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button onclick="refreshLogs()" class="btn">Refresh Logs</button>
+            <a href="/" class="btn">Back to Selection</a>
+            <div class="checkbox-wrapper">
+                <input type="checkbox" id="autoRefresh" checked onchange="toggleAutoRefresh()">
+                <label for="autoRefresh">Auto-refresh</label>
+            </div>
+        </div>
+        
+        <div class="logs-container">
+            <div id="logs">
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔍</div>
+                    <p>No logs yet. Run the PowerShell command above to start installation.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let autoRefreshInterval;
+        const sessionId = "{{SESSION_ID}}";
+        async function refreshLogs() {
+            try {
+                const response = await fetch(`/api/sessions/${sessionId}/logs`);
+                const data = await response.json();
+                const logsContainer = document.getElementById('logs');
+                if (data.logs && data.logs.length > 0) {
+                    logsContainer.innerHTML = data.logs.map(log => `
+                        <div class="log-entry ${log.status}">
+                            <div class="log-meta">
+                                <div class="timestamp">${log.time}</div>
+                                <div class="app-id">${log.app}</div>
+                                <div class="status-badge ${log.status}">${log.status}</div>
+                            </div>
+                            <div class="log-message">${log.message}</div>
+                        </div>
+                    `).join('');
+                    logsContainer.scrollTop = logsContainer.scrollHeight;
+                }
+            } catch (error) {
+                console.error('Failed to refresh logs:', error);
+            }
+        }
+        function toggleAutoRefresh() {
+            const checkbox = document.getElementById('autoRefresh');
+            if (checkbox.checked) {
+                autoRefreshInterval = setInterval(refreshLogs, 3000);
+            } else {
+                clearInterval(autoRefreshInterval);
+            }
+        }
+        function copyCommand() {
+            const command = document.getElementById('commandBox').textContent.replace('Copy', '').trim();
+            navigator.clipboard.writeText(command).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = '✓';
+                setTimeout(() => {
+                    btn.textContent = '📋';
+                }, 1000);
+            });
+        }
+        // Populate command box with dynamic URL
+        const command = `powershell.exe -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((Invoke-RestMethod 'http://your-bucket/install.ps1'))) -SessionId '${sessionId}' -ApiBaseUrl '${window.location.origin}'"`;        
+        document.getElementById('commandBox').innerHTML = `${command}<button class="copy-btn" onclick="copyCommand()" title="Copy command">📋</button>`;        
+        toggleAutoRefresh();
+        refreshLogs();
+    </script>
+</body>
+</html>

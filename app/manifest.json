@@ -1,0 +1,144 @@
+{
+  "applications": [
+    {
+      "id": "docker-desktop",
+      "name": "Docker Desktop",
+      "url": "https://your-bucket/docker-desktop-installer.exe",
+      "installer_type": "exe",
+      "args": "/quiet",
+      "version": "latest",
+      "commands": [
+        "Start-Sleep -Seconds 5",
+        "$data = Get-Content -Path 'C:\\Users\\$env:USERNAME\\AppData\\Roaming\\Docker\\settings.json' -Raw | ConvertFrom-Json",
+        "$data.kubernetes.enabled = $true",
+        "$data.integratedWslDistros += \"Ubuntu-20.04\"",
+        "$data | ConvertTo-Json | Set-Content -Path 'C:\\Users\\$env:USERNAME\\AppData\\Roaming\\Docker\\settings.json'",
+        "wsl -e bash -c \"curl https://your-bucket/docker-images-setup.sh | bash\""
+      ]
+    },
+    {
+      "id": "ubuntu",
+      "name": "Ubuntu",
+      "url": "https://your-bucket/ubuntu.zip",
+      "installer_type": "zip",
+      "version": "latest"
+    },
+    {
+      "id": "wsl",
+      "name": "Windows Subsystem for Linux (WSL)",
+      "url": "https://your-bucket/wsl.msi",
+      "installer_type": "msi",
+      "args": "/quiet /norestart",
+      "version": "latest",
+      "commands": [
+        "Write-Host 'NOTICE: Ubuntu will now open in a new window. You will need to create a username and password.' -ForegroundColor Yellow",
+        "Start-Sleep -Seconds 3",
+        "Start-Process -FilePath 'C:\\C:\\Program Files\\ubuntu\\ubuntu.exe' -Wait",
+        "wsl -s Ubuntu-20.04",
+        "wsl -e bash -c \"curl https://your-bucket/install-wsl-setup.sh | bash\"",
+        "wsl -e bash -c 'source ~/.bashrc'"
+      ]
+    },
+    {
+      "id": "helm",
+      "name": "Helm",
+      "url": "https://your-bucket/helm-windows-amd64.zip",
+      "installer_type": "zip",
+      "version": "latest"
+    },
+    {
+      "id": "kubernetes-cli",
+      "name": "Kubernetes CLI (kubectl)",
+      "url": "https://your-bucket/kubectl.exe",
+      "installer_type": "exe",
+      "args": "",
+      "version": "latest"
+    },
+    {
+      "id": "maven",
+      "name": "Apache Maven",
+      "url": "https://your-bucket/apache-maven.zip",
+      "installer_type": "zip",
+      "version": "latest"
+    },
+    {
+      "id": "intellij",
+      "name": "IntelliJ IDEA Community",
+      "url": "https://your-bucket/ideaIC.exe",
+      "installer_type": "exe",
+      "args": "/S",
+      "version": "latest"
+    },
+    {
+      "id": "pycharm",
+      "name": "PyCharm Community",
+      "url": "https://your-bucket/pycharm-community.exe",
+      "installer_type": "exe",
+      "args": "/S",
+      "version": "latest"
+    },
+    {
+      "id": "postman",
+      "name": "Postman",
+      "url": "https://your-bucket/Postman-win64.exe",
+      "installer_type": "exe",
+      "args": "/S",
+      "version": "latest"
+    },
+    {
+      "id": "vscode",
+      "name": "Visual Studio Code",
+      "url": "https://your-bucket/VSCodeUserSetup-x64.exe",
+      "installer_type": "exe",
+      "args": "/verysilent",
+      "version": "latest"
+    },
+    {
+      "id": "python",
+      "name": "Python 3.x",
+      "url": "https://your-bucket/python-3.x.exe",
+      "installer_type": "exe",
+      "args": "/quiet InstallAllUsers=1 PrependPath=1",
+      "version": "3.x"
+    },
+    {
+      "id": "datagrip",
+      "name": "DataGrip",
+      "url": "https://your-bucket/datagrip.exe",
+      "installer_type": "exe",
+      "args": "/S",
+      "version": "latest"
+    },
+    {
+      "id": "gitkraken",
+      "name": "GitKraken",
+      "url": "https://your-bucket/gitkraken.exe",
+      "installer_type": "exe",
+      "args": "/S",
+      "version": "latest"
+    },
+    {
+      "id": "nodejs",
+      "name": "Node.js LTS",
+      "url": "https://your-bucket/node-vX.Y.Z-x64.msi",
+      "installer_type": "msi",
+      "args": "/quiet /norestart",
+      "version": "LTS"
+    },
+    {
+      "id": "java",
+      "name": "Java JDK",
+      "url": "https://your-bucket/jdk-X.Y.Z-windows-x64.zip",
+      "installer_type": "zip",
+      "version": "X.Y.Z"
+    },
+    {
+      "id": "tilt",
+      "name": "Tilt",
+      "url": "https://your-bucket/tilt.exe",
+      "installer_type": "exe",
+      "args": "",
+      "version": "latest"
+    }
+  ]
+}
