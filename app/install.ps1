@@ -1,12 +1,12 @@
 param(
     [Parameter(Mandatory)] [string] $SessionId,
-    [Parameter(Mandatory)] [string]    $ApiBaseUrl
+    [Parameter(Mandatory)] [string] $ApiBaseUrl
 )
 
 function Post-Update { param($id,$status,$msg)
     $body = @{ session_id=$SessionId; app=$id; status=$status; log=$msg } | ConvertTo-Json
     try { Invoke-RestMethod -Uri "$ApiBaseUrl/sessions/update" -Method Post -Body $body -ContentType 'application/json' }
-    catch { Write-Warning "POST update failed for $id: $($_.Exception.Message)" }
+    catch { Write-Warning "POST update failed for ${id}: $($_.Exception.Message)" }
 }
 
 # Download session manifest
