@@ -6,7 +6,7 @@
       "url": "https://your-bucket/docker-desktop-installer.exe",
       "installer_type": "exe",
       "args": "/quiet",
-      "version": "latest",
+      "version": "4.26.1",
       "commands": [
         "Start-Sleep -Seconds 5",
         "$data = Get-Content -Path 'C:\\Users\\$env:USERNAME\\AppData\\Roaming\\Docker\\settings.json' -Raw | ConvertFrom-Json",
@@ -21,7 +21,8 @@
       "name": "Ubuntu",
       "url": "https://your-bucket/ubuntu.zip",
       "installer_type": "zip",
-      "version": "latest"
+      "version": "22.04",
+      "add_to_path": false
     },
     {
       "id": "wsl",
@@ -29,7 +30,7 @@
       "url": "https://your-bucket/wsl.msi",
       "installer_type": "msi",
       "args": "/quiet /norestart",
-      "version": "latest",
+      "version": "2.0",
       "commands": [
         "Write-Host 'NOTICE: Ubuntu will now open in a new window. You will need to create a username and password.' -ForegroundColor Yellow",
         "Start-Sleep -Seconds 3",
@@ -44,7 +45,8 @@
       "name": "Helm",
       "url": "https://your-bucket/helm-windows-amd64.zip",
       "installer_type": "zip",
-      "version": "latest"
+      "version": "3.13.2",
+      "add_to_path": true
     },
     {
       "id": "kubernetes-cli",
@@ -52,14 +54,16 @@
       "url": "https://your-bucket/kubectl.exe",
       "installer_type": "exe",
       "args": "",
-      "version": "latest"
+      "version": "1.29.1"
     },
     {
       "id": "maven",
       "name": "Apache Maven",
       "url": "https://your-bucket/apache-maven.zip",
       "installer_type": "zip",
-      "version": "latest"
+      "version": "3.9.6",
+      "add_to_path": true,
+      "env_vars": ["MAVEN_HOME", "M2_HOME"]
     },
     {
       "id": "intellij",
@@ -67,7 +71,7 @@
       "url": "https://your-bucket/ideaIC.exe",
       "installer_type": "exe",
       "args": "/S",
-      "version": "latest"
+      "version": "2023.3.2"
     },
     {
       "id": "pycharm",
@@ -75,7 +79,7 @@
       "url": "https://your-bucket/pycharm-community.exe",
       "installer_type": "exe",
       "args": "/S",
-      "version": "latest"
+      "version": "2023.3.2"
     },
     {
       "id": "postman",
@@ -83,7 +87,7 @@
       "url": "https://your-bucket/Postman-win64.exe",
       "installer_type": "exe",
       "args": "/S",
-      "version": "latest"
+      "version": "10.20.0"
     },
     {
       "id": "vscode",
@@ -91,7 +95,7 @@
       "url": "https://your-bucket/VSCodeUserSetup-x64.exe",
       "installer_type": "exe",
       "args": "/verysilent",
-      "version": "latest"
+      "version": "1.85.2"
     },
     {
       "id": "python",
@@ -99,7 +103,7 @@
       "url": "https://your-bucket/python-3.x.exe",
       "installer_type": "exe",
       "args": "/quiet InstallAllUsers=1 PrependPath=1",
-      "version": "3.x"
+      "version": "3.12.1"
     },
     {
       "id": "datagrip",
@@ -107,7 +111,7 @@
       "url": "https://your-bucket/datagrip.exe",
       "installer_type": "exe",
       "args": "/S",
-      "version": "latest"
+      "version": "2023.3.2"
     },
     {
       "id": "gitkraken",
@@ -115,7 +119,7 @@
       "url": "https://your-bucket/gitkraken.exe",
       "installer_type": "exe",
       "args": "/S",
-      "version": "latest"
+      "version": "9.1.0"
     },
     {
       "id": "nodejs",
@@ -123,14 +127,16 @@
       "url": "https://your-bucket/node-vX.Y.Z-x64.msi",
       "installer_type": "msi",
       "args": "/quiet /norestart",
-      "version": "LTS"
+      "version": "20.10.0"
     },
     {
       "id": "java",
       "name": "Java JDK",
       "url": "https://your-bucket/jdk-X.Y.Z-windows-x64.zip",
       "installer_type": "zip",
-      "version": "X.Y.Z"
+      "version": "21.0.1",
+      "add_to_path": true,
+      "env_vars": ["JAVA_HOME"]
     },
     {
       "id": "tilt",
@@ -138,7 +144,7 @@
       "url": "https://your-bucket/tilt.exe",
       "installer_type": "exe",
       "args": "",
-      "version": "latest"
+      "version": "0.33.9"
     }
   ]
 }
