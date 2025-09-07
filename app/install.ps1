@@ -1,59 +1,61 @@
 param(
-    [Parameter(Mandatory)] [string] $SessionId,
-    [Parameter(Mandatory)] [string] $ApiBaseUrl
+    [Parameter(Mandatory)][string]$SessionId,
+    [Parameter(Mandatory)][string]$ApiBaseUrl
 )
 
-function Post-Update { param($id,$status,$msg)
-    $body = @{ session_id=$SessionId; app=$id; status=$status; log=$msg } | ConvertTo-Json
-    try { Invoke-RestMethod -Uri "$ApiBaseUrl/sessions/update" -Method Post -Body $body -ContentType 'application/json' }
-    catch { Write-Warning "POST update failed for ${id}: $($_.Exception.Message)" }
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+function Post-Update {
+    param([string]$Id, [string]$Status, [string]$Message)
+    $body = @{ session_id=$SessionId; app=$Id; status=$Status; log=$Message } | ConvertTo-Json -Compress
+    try { Invoke-RestMethod -Uri "$ApiBaseUrl/sessions/update" -Method Post -Body $body -ContentType 'application/json' -TimeoutSec 10 }
+    catch { Write-Warning "Failed to update $Id`: $_" }
 }
 
-# Download session manifest
-try { $sessionJson = Invoke-RestMethod -Uri "$ApiBaseUrl/sessions/json/$SessionId" }
-catch { Write-Error "Failed to fetch session JSON: $_"; exit 1 }
+try {
+    $sessionJson = Invoke-RestMethod -Uri "$ApiBaseUrl/sessions/json/$SessionId" -TimeoutSec 30
+} catch {
+    Write-Error "Failed to fetch session data: $_"
+    exit 1
+}
 
 foreach ($app in $sessionJson.apps) {
-    $id = $app.id; $url = $app.url; $type = $app.installer_type
-    $args = $app.args; $expectedHash = $app.sha256
-    Post-Update $id "starting" "Downloading $id"
+    $id = $app.id
     $tmp = "$env:TEMP\$id-installer"
-
-    try { Invoke-RestMethod -Uri $url -OutFile $tmp }
-    catch { Post-Update $id "error" "Download failed: $_"; continue }
-
-    if ($expectedHash) {
-        try {
-            $actual = (Get-FileHash -Path $tmp -Algorithm SHA256).Hash.ToLower()
-            if ($actual -ne $expectedHash.ToLower()) {
-                Post-Update $id "error" "Hash mismatch: $actual"
-                continue
-            } else { Post-Update $id "info" "Hash verified" }
-        } catch { Post-Update $id "error" "Hash check failed: $_"; continue }
+    
+    Post-Update $id "starting" "Downloading $id"
+    
+    try {
+        Invoke-RestMethod -Uri $app.url -OutFile $tmp -TimeoutSec 300
+    } catch {
+        Post-Update $id "error" "Download failed: $_"
+        continue
     }
 
     Post-Update $id "running" "Installing $id"
     try {
-        switch ($type) {
-            'exe' { Start-Process -FilePath $tmp -ArgumentList $args -Wait }
-            'msi' { Start-Process msiexec.exe -ArgumentList "/i `"$tmp`" $args /qn /norestart" -Wait }
+        switch ($app.installer_type) {
+            'exe' { 
+                Start-Process -FilePath $tmp -ArgumentList $app.args -Wait -NoNewWindow
+            }
+            'msi' { 
+                Start-Process msiexec.exe -ArgumentList "/i `"$tmp`" $($app.args) /qn /norestart" -Wait -NoNewWindow
+            }
             'zip' {
                 $dest = "$env:ProgramFiles\$id"
+                if (Test-Path $dest) { Remove-Item $dest -Recurse -Force }
                 Expand-Archive -Path $tmp -DestinationPath $dest -Force
+                
                 if ($app.add_to_path) {
-                    [Environment]::SetEnvironmentVariable('Path',
-                        [Environment]::GetEnvironmentVariable('Path','Machine') + ";$dest",
-                        'Machine')
-                    Post-Update $id "info" "Added $dest to PATH"
+                    $currentPath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
+                    if ($currentPath -notlike "*$dest*") {
+                        [Environment]::SetEnvironmentVariable('Path', "$currentPath;$dest", 'Machine')
+                        Post-Update $id "info" "Added $dest to PATH"
+                    }
                 }
             }
-        }
-
-        # Handle JetBrains activation
-        if ($app.type -eq 'jetbrains' -and $app.activation_code) {
-            $config = "$env:APPDATA\JetBrains\$($app.id)\activation.code"
-            Set-Content -Path $config -Value $app.activation_code -Force
-            Post-Update $id "info" "Activation code applied"
+            default { throw "Unsupported installer type: $($app.installer_type)" }
         }
 
         # Execute post-installation commands
@@ -61,19 +63,20 @@ foreach ($app in $sessionJson.apps) {
             Post-Update $id "info" "Running post-installation commands"
             foreach ($cmd in $app.commands) {
                 try {
-                    & powershell -NoProfile -Command $cmd
+                    Invoke-Expression $cmd
                     Post-Update $id "info" "Command executed: $cmd"
                 } catch {
                     Post-Update $id "warning" "Command failed: $cmd - $_"
                 }
             }
         }
-
-        Post-Update $id "success" "$id installed"
-    } catch {
-        Post-Update $id "error" "Install failed: $_"
-    } finally {
-        Remove-Item $tmp -Force -ErrorAction Silently
         
+        Post-Update $id "success" "$id installed successfully"
+    } catch {
+        Post-Update $id "error" "Installation failed: $_"
+    } finally {
+        if (Test-Path $tmp) {
+            Remove-Item $tmp -Force -ErrorAction SilentlyContinue
+        }
     }
 }
