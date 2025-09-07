@@ -1,0 +1,140 @@
+body {
+    height: 100vh;
+    overflow: hidden;
+}
+
+.container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+h1 {
+    font-size: 2.2rem;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    margin-bottom: 32px;
+    font-size: 1rem;
+}
+
+.controls {
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.checkbox-wrapper input { margin: 0; }
+
+.logs-container {
+    background: #ffffff;
+    border: 1px solid #f0f0f0;
+    border-radius: 16px;
+    padding: 24px;
+    overflow: hidden;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+#logs {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+}
+
+.log-entry {
+    padding: 16px 0;
+    border-bottom: 1px solid #f8f9fa;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.log-entry:last-child { border-bottom: none; }
+
+.log-entry:hover {
+    background: #f8f9fa;
+    margin: 0 -24px 0 -24px;
+    padding-left: 24px;
+    padding-right: 32px;
+    border-radius: 8px;
+}
+
+.status-circle {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-top: 4px;
+    flex-shrink: 0;
+}
+
+.status-circle.starting { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+.status-circle.running { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
+.status-circle.success { background: linear-gradient(135deg, #34d399, #10b981); }
+.status-circle.error { background: linear-gradient(135deg, #f87171, #ef4444); }
+.status-circle.info { background: linear-gradient(135deg, #22d3ee, #06b6d4); }
+
+.log-content { flex: 1; }
+
+.log-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.app-name {
+    color: #1f2937;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.status-pill {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 12px;
+    letter-spacing: 0.5px;
+}
+
+.status-pill.starting { background: #fef3c7; color: #d97706; }
+.status-pill.running { background: #dbeafe; color: #2563eb; }
+.status-pill.success { background: #d1fae5; color: #059669; }
+.status-pill.error { background: #fee2e2; color: #dc2626; }
+.status-pill.info { background: #cffafe; color: #0891b2; }
+
+.timestamp {
+    color: #9ca3af;
+    font-size: 0.8rem;
+    font-family: 'SF Mono', Monaco, monospace;
+    margin-left: auto;
+}
+
+.log-message {
+    color: #6b7280;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #9ca3af;
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: 0.6;
+}
