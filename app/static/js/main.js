@@ -137,7 +137,7 @@ async function createSession() {
     if (response.ok) {
         document.getElementById('sessionId').textContent = data.session_id;
         const command = `powershell.exe -ExecutionPolicy Bypass -Command "$f='$env:TEMP\\\\install.ps1'; Invoke-RestMethod '${data.s3_url}' -OutFile $f; & $f -SessionId '${data.session_id}' -ApiBaseUrl '${window.location.origin}'"`;
-        document.getElementById('psCommand').innerHTML = `${command}<button class="copy-btn" onclick="copyCommand()" title="Copy command">📋</button>`;
+        document.getElementById('psCommand').innerHTML = `${command}<button class="copy-btn" onclick="copyCommand()" title="Copy command"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>`;
         document.getElementById('sessionLink').href = `/session/${data.session_id}`;
         document.getElementById('result').classList.remove('hidden');
     } else {
@@ -150,9 +150,9 @@ function copyCommand() {
     const command = commandElement.textContent.replace('Copy', '').trim();
     navigator.clipboard.writeText(command).then(() => {
         const btn = document.querySelector('.copy-btn');
-        btn.textContent = '✓';
+        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20,6 9,17 4,12"></polyline></svg>';
         setTimeout(() => {
-            btn.textContent = '📋';
+            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
         }, 1000);
     });
 }
