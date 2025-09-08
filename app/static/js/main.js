@@ -25,6 +25,7 @@ function selectNone() {
         cb.checked = false;
         cb.closest('.app-item').classList.remove('selected');
     });
+    enableApp('wsl-updater');
     enableApp('wsl');
     enableApp('ubuntu');
     ubuntuManuallySelected = false;
@@ -37,9 +38,9 @@ function handleAppSelection(appId, isChecked) {
     
     if (isChecked) {
         if (appId === 'wsl') {
-            selectDependencies(['ubuntu'], 'WSL requires Ubuntu');
+            selectDependencies(['wsl-updater', 'ubuntu'], 'WSL requires WSL Updater and Ubuntu');
         } else if (appId === 'docker-desktop') {
-            selectDependencies(['wsl', 'ubuntu'], 'Docker requires WSL and Ubuntu');
+            selectDependencies(['wsl-updater', 'wsl', 'ubuntu'], 'Docker requires WSL Updater, WSL and Ubuntu');
         }
     }
     
@@ -70,12 +71,15 @@ function updateDependencyLocks() {
     const wslSelected = document.querySelector('input[value="wsl"]').checked;
     
     if (dockerSelected) {
+        disableApp('wsl-updater');
         disableApp('wsl');
         disableApp('ubuntu');
     } else if (wslSelected) {
+        disableApp('wsl-updater');
         disableApp('ubuntu');
         enableApp('wsl');
     } else {
+        enableApp('wsl-updater');
         enableApp('wsl');
         enableApp('ubuntu');
     }
@@ -148,13 +152,28 @@ async function createSession() {
 function copyCommand() {
     const commandElement = document.getElementById('psCommand');
     const command = commandElement.textContent.replace('Copy', '').trim();
-    navigator.clipboard.writeText(command).then(() => {
-        const btn = document.querySelector('.copy-btn');
-        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20,6 9,17 4,12"></polyline></svg>';
-        setTimeout(() => {
-            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
-        }, 1000);
-    });
+    
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(command).then(() => showCopySuccess());
+    } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = command;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showCopySuccess();
+    }
+}
+
+function showCopySuccess() {
+    const btn = document.querySelector('.copy-btn');
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20,6 9,17 4,12"></polyline></svg>';
+    setTimeout(() => {
+        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+    }, 1000);
 }
 
 function showSupportModal() {

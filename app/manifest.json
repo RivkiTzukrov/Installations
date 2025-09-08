@@ -25,6 +25,14 @@
       "add_to_path": false
     },
     {
+      "id": "wsl-updater",
+      "name": "WSL Updater",
+      "url": "https://your-bucket/wsl-updater.msi",
+      "installer_type": "msi",
+      "args": "/quiet /norestart",
+      "version": "1.0"
+    },
+    {
       "id": "wsl",
       "name": "Windows Subsystem for Linux (WSL)",
       "url": "https://your-bucket/wsl.msi",
