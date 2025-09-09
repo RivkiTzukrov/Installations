@@ -38,7 +38,8 @@ function Install-Application {
     param($App)
     
     $id = $App.id
-    $tmpFile = "$env:TEMP\$id-installer"
+    $file = $App.url.Split('/')[-1]
+    $tmpFile = "$env:TEMP\$file"
     
     Post-Update $id "starting" "Downloading $id"
     
@@ -90,7 +91,7 @@ function Install-Application {
         }
         
         # Handle JetBrains activation
-        if ($App.type -eq 'jetbrains' -and $App.activation_code) {
+        if ($App.PSObject.Properties['type'] -and $App.type -eq 'jetbrains' -and $App.activation_code) {
             $configDir = "$env:APPDATA\JetBrains\$id"
             if (-not (Test-Path $configDir)) { New-Item -Path $configDir -ItemType Directory -Force }
             Set-Content -Path "$configDir\activation.code" -Value $App.activation_code -Force
@@ -98,7 +99,7 @@ function Install-Application {
         }
         
         # Execute post-installation commands
-        if ($App.commands) {
+        if ($App.PSObject.Properties['commands'] -and $App.commands) {
             Post-Update $id "info" "Running post-installation commands"
             foreach ($cmd in $App.commands) {
                 try {
