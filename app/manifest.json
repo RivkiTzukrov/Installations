@@ -6,14 +6,10 @@
       "url": "https://your-bucket/docker-desktop-installer.exe",
       "installer_type": "exe",
       "args": "/quiet",
-      "version": "4.26.1",
+      "version": "4.35+",
       "commands": [
-        "Start-Sleep -Seconds 5",
-        "$data = Get-Content -Path 'C:\\Users\\$env:USERNAME\\AppData\\Roaming\\Docker\\settings.json' -Raw | ConvertFrom-Json",
-        "$data.kubernetes.enabled = $true",
-        "$data.integratedWslDistros += \"Ubuntu-20.04\"",
-        "$data | ConvertTo-Json | Set-Content -Path 'C:\\Users\\$env:USERNAME\\AppData\\Roaming\\Docker\\settings.json'",
-        "wsl -e bash -c \"curl https://your-bucket/docker-images-setup.sh | bash\""
+        "Start-Process -FilePath 'C:\\Program Files\\Docker\\docker.exe' -Wait",
+        "Start-Sleep -Seconds 5"
       ]
     },
     {
@@ -22,7 +18,12 @@
       "url": "https://your-bucket/ubuntu.zip",
       "installer_type": "zip",
       "version": "22.04",
-      "add_to_path": false
+      "add_to_path": false,
+      "commands": [
+        "Post-Update 'ubuntu' 'waiting' 'Ubuntu will open for initial setup. Please create username and password when prompted.'",
+        "Start-Process -FilePath 'C:\\Program Files\\ubuntu\\ubuntu.exe' -Wait",
+        "Post-Update 'ubuntu' 'info' 'Ubuntu setup completed successfully'"
+      ]
     },
     {
       "id": "wsl-updater",
@@ -40,10 +41,11 @@
       "args": "/quiet /norestart",
       "version": "2.0",
       "commands": [
-        "Write-Host 'NOTICE: Ubuntu will now open in a new window. You will need to create a username and password.' -ForegroundColor Yellow",
-        "Start-Sleep -Seconds 3",
-        "Start-Process -FilePath 'C:\\C:\\Program Files\\ubuntu\\ubuntu.exe' -Wait",
+        "Post-Update 'wsl' 'waiting' 'Ubuntu will open in a new window. Please create username and password when prompted.'",
+        "Start-Process -FilePath 'C:\\Program Files\\ubuntu\\ubuntu.exe' -Wait",
+        "Post-Update 'wsl' 'info' 'Ubuntu setup completed. Configuring WSL...'",
         "wsl -s Ubuntu-20.04",
+        "Post-Update 'wsl' 'info' 'Running WSL setup script - Administrator credentials may be required'",
         "wsl -e bash -c \"curl https://your-bucket/install-wsl-setup.sh | bash\"",
         "wsl -e bash -c 'source ~/.bashrc'"
       ]

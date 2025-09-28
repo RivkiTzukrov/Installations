@@ -83,6 +83,7 @@ h1 {
 .status-circle.success { background: linear-gradient(135deg, #34d399, #10b981); }
 .status-circle.error { background: linear-gradient(135deg, #f87171, #ef4444); }
 .status-circle.info { background: linear-gradient(135deg, #22d3ee, #06b6d4); }
+.status-circle.waiting { background: linear-gradient(135deg, #a78bfa, #8b5cf6); }
 
 .log-content { flex: 1; }
 
@@ -113,6 +114,7 @@ h1 {
 .status-pill.success { background: #d1fae5; color: #059669; }
 .status-pill.error { background: #fee2e2; color: #dc2626; }
 .status-pill.info { background: #cffafe; color: #0891b2; }
+.status-pill.waiting { background: #ede9fe; color: #7c3aed; }
 
 .timestamp {
     color: #9ca3af;
